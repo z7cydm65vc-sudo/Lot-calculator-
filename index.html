@@ -1,0 +1,139 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Lot Size Calculator</title>
+  <meta name="description" content="Forex risk calculator: correct lot size including commission and slippage, for GBP and USD accounts.">
+  <meta name="theme-color" content="#0b0f17">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Lot Size">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="wrap">
+
+    <!-- 1. Account -->
+    <section class="card" aria-label="Account">
+      <div class="row nowrap">
+        <select id="account" class="grow big-select" aria-label="Account"></select>
+        <div class="seg" role="group" aria-label="Account currency">
+          <button type="button" data-currency="GBP">GBP</button>
+          <button type="button" data-currency="USD">USD</button>
+        </div>
+      </div>
+      <div class="row nowrap gap-sm mt">
+        <button id="acc-new" class="btn" type="button">New</button>
+        <button id="acc-rename" class="btn" type="button">Rename</button>
+        <button id="acc-delete" class="btn danger" type="button">Delete</button>
+        <button id="theme" class="icon-btn ml-auto" type="button" aria-label="Toggle light/dark">◐</button>
+      </div>
+    </section>
+
+    <!-- 2. Trade + result -->
+    <section class="card" aria-label="Trade">
+      <label class="lbl" for="pair">Pair</label>
+      <select id="pair" class="big-select"></select>
+      <p id="pair-hint" class="hint"></p>
+
+      <label class="lbl mt" for="stop" id="stop-label">Stop loss (pips)</label>
+      <input id="stop" class="input huge" type="text" inputmode="decimal" autocomplete="off" placeholder="0.0">
+
+      <div id="rates" class="rates"></div>
+
+      <div id="result" class="result" aria-live="polite">
+        <div id="res-msg" class="res-msg"></div>
+        <div id="res-main" hidden>
+          <div class="use-row">
+            <div class="use"><span class="use-word">USE</span> <span id="res-lots" class="lots">0.00</span> <span class="use-word">LOTS</span></div>
+            <button id="copy" class="btn copy" type="button">Copy</button>
+          </div>
+          <div id="res-loss" class="res-loss"></div>
+          <div class="bar" aria-hidden="true"><div id="res-bar" class="bar-fill"></div></div>
+          <div id="res-warn" class="res-warn" hidden></div>
+          <details class="breakdown" id="breakdown" open>
+            <summary>Breakdown</summary>
+            <dl id="res-break"></dl>
+          </details>
+        </div>
+      </div>
+    </section>
+
+    <!-- 3. Risk -->
+    <section class="card" aria-label="Risk per trade">
+      <div class="row">
+        <h2 class="h">Risk per trade</h2>
+        <div class="seg ml-auto" role="group" aria-label="Risk mode">
+          <button type="button" data-riskmode="fixed">Fixed amount</button>
+          <button type="button" data-riskmode="pct">% of balance</button>
+        </div>
+      </div>
+      <div id="risk-fixed" class="mt">
+        <label class="lbl" for="riskAmount">Risk amount (<span class="sym"></span>)</label>
+        <input id="riskAmount" class="input" type="text" inputmode="decimal" autocomplete="off" data-field="riskAmount">
+      </div>
+      <div id="risk-pct" class="mt" hidden>
+        <label class="lbl" for="balance">Balance (<span class="sym"></span>)</label>
+        <input id="balance" class="input" type="text" inputmode="decimal" autocomplete="off" data-field="balance">
+        <div id="bal-quick" class="chips"></div>
+        <label class="lbl mt" for="riskPct">Risk %</label>
+        <input id="riskPct" class="input" type="text" inputmode="decimal" autocomplete="off" data-field="riskPct">
+        <div id="pct-quick" class="chips"></div>
+        <p id="pct-eq" class="eq"></p>
+      </div>
+    </section>
+
+    <!-- 4. Settings -->
+    <details class="card settings" id="settings">
+      <summary class="h">Settings for this account</summary>
+      <div class="grid2 mt">
+        <div>
+          <label class="lbl" for="commission">Commission per lot, round turn (<span class="sym"></span>)</label>
+          <input id="commission" class="input" type="text" inputmode="decimal" autocomplete="off" data-field="commission">
+        </div>
+        <div>
+          <label class="lbl" for="lotStep">Lot step</label>
+          <input id="lotStep" class="input" type="text" inputmode="decimal" autocomplete="off" data-field="lotStep">
+        </div>
+      </div>
+      <div class="row nowrap mt">
+        <label class="switch"><input id="slippageOn" type="checkbox"><span></span></label>
+        <label for="slippageOn" class="grow">Slippage buffer (pips/points)</label>
+        <input id="slippage" class="input small" type="text" inputmode="decimal" autocomplete="off" data-field="slippage" aria-label="Slippage amount">
+      </div>
+      <div class="grid2 mt">
+        <div>
+          <label class="lbl" for="pv-NAS100">NAS100 value / point / lot ($)</label>
+          <input id="pv-NAS100" class="input" type="text" inputmode="decimal" autocomplete="off" data-point="NAS100">
+        </div>
+        <div>
+          <label class="lbl" for="pv-US30">US30 value / point / lot ($)</label>
+          <input id="pv-US30" class="input" type="text" inputmode="decimal" autocomplete="off" data-point="US30">
+        </div>
+      </div>
+    </details>
+
+    <!-- 5. Check a lot size -->
+    <section class="card" aria-label="Check a lot size">
+      <h2 class="h">Check a lot size</h2>
+      <label class="lbl mt" for="checkLots">Lot size</label>
+      <input id="checkLots" class="input" type="text" inputmode="decimal" autocomplete="off" placeholder="e.g. 0.50">
+      <div id="check-out" class="check-out"></div>
+    </section>
+
+    <footer class="foot">
+      Calculated risk is an estimate. Spread, swap and slippage can make the actual loss differ.
+    </footer>
+  </main>
+
+  <div id="toast" class="toast" role="status" hidden></div>
+
+  <script src="calc.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
